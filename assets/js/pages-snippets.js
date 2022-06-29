@@ -135,7 +135,6 @@
                 snippetCode += '|' + componentClass
 
             snippetCodes.push(snippetCode)
-
             $snippet
                 .addClass('loading')
                 .addClass('fr-draggable')
@@ -146,7 +145,7 @@
                     'draggable': 'true',
                     'tabindex': '0'
                 })
-                .html('&nbsp;')
+                .html('&nbsp;(' + $snippet[0].dataset.propertyCode + ')&nbsp;')
 
             if (componentClass) {
                 $snippet.attr('data-inspector-class', componentClass)
@@ -204,7 +203,7 @@
                 case 32:
                     // Space key
                     $.oc.inspector.manager.createInspector(snippet)
-                break
+                    break
             }
         }
     }

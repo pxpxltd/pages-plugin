@@ -245,6 +245,10 @@
         if (data.forceReload) {
             this.reloadForm($form)
         }
+
+        if(context.handler === 'onSave') {
+            this.reloadForm($form)
+        }
     }
 
     PagesPage.prototype.onBeforeSaveContent = function(e, data) {
