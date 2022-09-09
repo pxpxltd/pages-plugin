@@ -1,14 +1,13 @@
 <?php namespace RainLab\Pages\Classes;
 
+use Backend\Facades\BackendAuth;
 use Cms;
 use File;
 use Lang;
 use Cache;
 use Event;
-use Route;
 use Config;
 use Validator;
-use RainLab\Pages\Classes\Router;
 use RainLab\Pages\Classes\Snippet;
 use RainLab\Pages\Classes\PageList;
 use Cms\Classes\Theme;
@@ -20,20 +19,22 @@ use October\Rain\Support\Str;
 use October\Rain\Router\Helper as RouterHelper;
 use October\Rain\Parse\Bracket as TextParser;
 use October\Rain\Parse\Syntax\Parser as SyntaxParser;
-use ApplicationException;
 use Twig\Node\Node as TwigNode;
 
 /**
- * Represents a static page.
+ * Page represents a static page.
  *
  * @package rainlab\pages
  * @author Alexey Bobkov, Samuel Georges
  */
 class Page extends ContentBase
 {
+    /**
+     * @var array implement
+     */
     public $implement = [
-        '@RainLab.Translate.Behaviors.TranslatablePageUrl',
-        '@RainLab.Translate.Behaviors.TranslatableCmsObject'
+        '@'.\RainLab\Translate\Behaviors\TranslatablePageUrl::class,
+        '@'.\RainLab\Translate\Behaviors\TranslatableCmsObject::class
     ];
 
     /**
@@ -65,7 +66,7 @@ class Page extends ContentBase
      */
     public $rules = [
         'title' => 'required',
-        'url'   => ['required', 'regex:/^\/[a-z0-9\/_\-\.]*$/i', 'uniqueUrl']
+        'url' => ['required', 'regex:/^\/[a-z0-9\/_\-\.]*$/i', 'uniqueUrl']
     ];
 
     /**
@@ -98,18 +99,33 @@ class Page extends ContentBase
      */
     public $parentFileName;
 
+    /**
+     * @var mixed menuTreeCache
+     */
     protected static $menuTreeCache = null;
 
+    /**
+     * @var mixed parentCache
+     */
     protected $parentCache = null;
 
+    /**
+     * @var mixed childrenCache
+     */
     protected $childrenCache = null;
 
+    /**
+     * @var mixed processedMarkupCache
+     */
     protected $processedMarkupCache = false;
 
+    /**
+     * @var mixed processedBlockMarkupCache
+     */
     protected $processedBlockMarkupCache = [];
 
     /**
-     * Creates an instance of the object and associates it with a CMS theme.
+     * __construct an instance of the object and associates it with a CMS theme.
      * @param array $attributes
      */
     public function __construct(array $attributes = [])
@@ -117,7 +133,7 @@ class Page extends ContentBase
         parent::__construct($attributes);
 
         $this->customMessages = [
-            'url.regex'      => 'rainlab.pages::lang.page.invalid_url',
+            'url.regex' => 'rainlab.pages::lang.page.invalid_url',
             'url.unique_url' => 'rainlab.pages::lang.page.url_not_unique',
         ];
     }
@@ -191,6 +207,23 @@ class Page extends ContentBase
     public function afterCreate()
     {
         $this->appendToMeta();
+        \Event::fire('al.change', [BackendAuth::getUser(), 'create', 'pages-page' . ': ' . $this->fileName]);
+    }
+
+    /**
+     * Triggered after a new object is saved.
+     */
+    public function afterUpdate()
+    {
+        \Event::fire('al.change', [BackendAuth::getUser(), 'update', 'pages-page' . ': ' . $this->fileName]);
+    }
+
+    /**
+     * Triggered after a new object is saved.
+     */
+    public function afterDelete()
+    {
+        \Event::fire('al.change', [BackendAuth::getUser(), 'delete', 'pages-page' . ': ' . $this->fileName]);
     }
 
     /**
@@ -202,8 +235,8 @@ class Page extends ContentBase
         $pageList->appendPage($this);
     }
 
-    /*
-     * Generate a file name based on the URL
+    /**
+     * generateFilenameFromCode based on the URL
      */
     protected function generateFilenameFromCode()
     {
@@ -230,7 +263,7 @@ class Page extends ContentBase
     }
 
     /**
-     * Deletes the object from the disk.
+     * delete the object from the disk.
      * Recursively deletes subpages. Returns a list of file names of deleted pages.
      * @return array
      */
@@ -256,7 +289,6 @@ class Page extends ContentBase
          * Remove from meta
          */
         $this->removeFromMeta();
-
 
         return $result;
     }
@@ -650,7 +682,7 @@ class Page extends ContentBase
         if (!empty($globalVars)) {
             $markup = TextParser::parse($markup, $globalVars);
         }
-        
+
         /*
          * Event hook
          */
