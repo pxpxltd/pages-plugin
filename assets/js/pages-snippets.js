@@ -32,13 +32,32 @@
             self.editorKeyDown(ev, originalEv, richeditor)
         })
 
-        $(document).on('click', '[data-snippet]', function() {
-            if ($(this).hasClass('inspector-open')) {
-                return
-            }
+        $(document).on('click', '[data-snippet]', function(ev) {
+            if ( ev.ctrlKey ) {
+                let attr =  $(this)[0].attributes
+                let node = attr.getNamedItem('data-property-code');
+                console.log(node)
+                var xhr = new XMLHttpRequest();
+                xhr.open("POST", '/_tt/api/v1/open-node', true);
+                xhr.setRequestHeader('Content-Type', 'application/json');
+                xhr.onload  = function() {
+                    var jsonResponse = JSON.parse(xhr.responseText);
+                    if(jsonResponse.url) {
+                        window.open(jsonResponse.url, '_blank').focus()
+                    }
+                };
+                xhr.send(JSON.stringify({
+                    snippetCode: node.value
+                }));
 
-            $.oc.inspector.manager.createInspector(this)
-            return false
+            } else {
+                if ($(this).hasClass('inspector-open')) {
+                    return
+                }
+
+                $.oc.inspector.manager.createInspector(this)
+                return false
+            }
         })
     }
 
