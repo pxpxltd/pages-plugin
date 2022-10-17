@@ -33,7 +33,7 @@
         })
 
         $(document).on('click', '[data-snippet]', function(ev) {
-            if ( ev.ctrlKey ) {
+            if ( ev.ctrlKey || ev.metaKey ) {
                 let attr =  $(this)[0].attributes
                 let node = attr.getNamedItem('data-property-code');
                 console.log(node)
